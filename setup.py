@@ -10,8 +10,8 @@ setup(
     packages=find_packages(),
     python_requires=">=3.9,<4",
     install_requires=[
-        "fastapi~=0.115.2",
-        "uvicorn~=0.31.1",
+        "fastapi",
+        "uvicorn",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.9",
