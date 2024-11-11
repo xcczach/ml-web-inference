@@ -43,4 +43,4 @@ def expose(
 
         return await inference_function(request)
 
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_level="info")
