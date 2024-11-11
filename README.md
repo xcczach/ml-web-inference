@@ -1,2 +1,3 @@
-# f5-tts-inference
-Provides inference endpoint for f5-tts
+# ml-web-inference
+
+Template for exposing a machine learning model as a web service.
