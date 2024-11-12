@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ml_web_inference",
-    version="0.1.0",
+    version="0.1.2",
     description="A Python package for ML web inference using FastAPI",
     author="xcc",
     author_email="2867389537@qq.com",
@@ -12,6 +12,8 @@ setup(
     install_requires=[
         "fastapi",
         "uvicorn",
+        "pynvml",
+        "torch"
     ],
     classifiers=[
         "Programming Language :: Python :: 3.9",

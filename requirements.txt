@@ -1,2 +1,4 @@
-fastapi~=0.115.2
-uvicorn~=0.31.1
+fastapi
+uvicorn
+pynvml
+torch
