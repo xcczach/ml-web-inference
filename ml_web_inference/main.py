@@ -16,6 +16,7 @@ def expose(
     hangup_function: Callable[[], None] = None,
     hangup_timeout_sec: int = 1800,
     hangup_interval_sec: int = 60,
+    init_on_expose: bool = True,
 ):
     """
     Expose an inference API using FastAPI with initialization and hangup management.
@@ -25,16 +26,16 @@ def expose(
 
     Args:
         api_name (str): The name of the API endpoint.
-        inference_function (Callable[[Request], Awaitable[Response]]): 
+        inference_function (Callable[[Request], Awaitable[Response]]):
             The asynchronous function that processes inference requests.
         port (int, optional): The port number on which the FastAPI app will run. Defaults to 10000.
-        init_function (Callable[[], None], optional): 
+        init_function (Callable[[], None], optional):
             A function to initialize resources before handling the first request. Defaults to None.
-        hangup_function (Callable[[], None], optional): 
+        hangup_function (Callable[[], None], optional):
             A function to clean up resources after a period of inactivity. Defaults to None.
-        hangup_timeout_sec (int, optional): 
+        hangup_timeout_sec (int, optional):
             The duration in seconds of inactivity after which the hangup_function is triggered. Defaults to 1800 seconds (30 minutes).
-        hangup_interval_sec (int, optional): 
+        hangup_interval_sec (int, optional):
             The interval in seconds at which the system checks for inactivity. Defaults to 60 seconds.
 
     Returns:
@@ -44,6 +45,15 @@ def expose(
     app = FastAPI()
     initialized = False
     last_inference_time = datetime.now()
+
+    def init():
+        nonlocal initialized
+        if init_function is not None:
+            init_function()
+        initialized = True
+
+    if init_on_expose:
+        init()
 
     async def check_hangup():
         nonlocal initialized
@@ -60,9 +70,7 @@ def expose(
     async def inference(request: Request, background_tasks: BackgroundTasks):
         nonlocal initialized, last_inference_time
         if not initialized:
-            if init_function is not None:
-                init_function()
-            initialized = True
+            init()
         last_inference_time = datetime.now()
         background_tasks.add_task(check_hangup)
 
@@ -70,7 +78,10 @@ def expose(
 
     uvicorn.run(app, host=host, port=port, log_level="info")
 
+
 pynvml.nvmlInit()
+
+
 def get_proper_device(gpu_threshold_mb: float) -> int:
     """
     Select the most suitable GPU device based on available memory and utilization.
@@ -105,6 +116,7 @@ def get_proper_device(gpu_threshold_mb: float) -> int:
         device = max(devices_all, key=lambda x: x[1])
         return device[0]
 
+
 def get_model_size_mb(model: Module) -> float:
     """
     Calculate the size of a machine learning model in megabytes.
@@ -118,7 +130,11 @@ def get_model_size_mb(model: Module) -> float:
     Returns:
         float: The size of the model in megabytes (MB).
     """
-    param_size = sum(param.nelement() * param.element_size() for param in model.parameters())
-    buffer_size = sum(buffer.nelement() * buffer.element_size() for buffer in model.buffers())
-    size_all_mb = (param_size + buffer_size) / (1024 ** 2)
+    param_size = sum(
+        param.nelement() * param.element_size() for param in model.parameters()
+    )
+    buffer_size = sum(
+        buffer.nelement() * buffer.element_size() for buffer in model.buffers()
+    )
+    size_all_mb = (param_size + buffer_size) / (1024**2)
     return size_all_mb
